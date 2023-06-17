@@ -2,6 +2,12 @@ import cv2
 import numpy as np
 
 from screenshot import screenshot
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('window_name', type=str, help='A string argument')
+args = parser.parse_args()
+
 
 # create a window to display the mirror image
 cv2.namedWindow("Mirror", cv2.WINDOW_NORMAL)
@@ -9,7 +15,7 @@ cv2.setWindowProperty("Mirror", cv2.WND_PROP_TOPMOST, 1)
 # loop over the frames
 while True:
     # capture a screenshot of the screen
-    shot = screenshot("NIKKE")
+    shot = screenshot(args.window_name)
     if shot is None:
         print(
             "Can't find the window. Check if the name is correct or try running as admin."
