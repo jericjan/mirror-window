@@ -64,7 +64,7 @@ def screenshot(hwnd):
             0,
             1,
         )
-    except ValueError as e:        
+    except ValueError as e:
         return str(e)
     win32gui.DeleteObject(saveBitMap.GetHandle())
     saveDC.DeleteDC()
