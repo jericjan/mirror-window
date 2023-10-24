@@ -10,9 +10,17 @@ from screenshot import get_hwnd, screenshot
 
 parser = argparse.ArgumentParser()
 parser.add_argument("window_name", type=str, help="A string argument")
+parser.add_argument('--disable-auto-popup', action='store_true')
+parser.add_argument('--disable-minimize', action='store_true')
 args = parser.parse_args()
 
-MIRROR_WIN_NAME = "Mirror"
+print(f"Disable auto popup: {args.disable_auto_popup}")
+print(f"Disable auto popup: {args.disable_minimize}")
+
+DO_MINIMIZE = not args.disable_minimize
+DO_POPUP = not args.disable_auto_popup
+
+MIRROR_WIN_NAME = f"Mirror - [{args.window_name}]"
 DELAY_MIRRORING = 250
 DELAY_NOTHING = 1000
 # create a window to display the mirror image
@@ -36,7 +44,7 @@ while True:
     elif shot == "focused":
         print("The window is focused.")
 
-        if type(prev_shot).__name__ == "Image":
+        if type(prev_shot).__name__ == "Image" and DO_MINIMIZE:
             win32gui.SendMessage(
                 mirror_hwnd, win32con.WM_SYSCOMMAND, win32con.SC_MINIMIZE, 0
             )
@@ -52,7 +60,7 @@ while True:
         # convert the screenshot to a NumPy array
         screenshot_array = cv2.cvtColor(np.array(shot), cv2.COLOR_RGB2BGR)
 
-        if prev_shot == "focused":
+        if prev_shot == "focused" and (DO_POPUP or not DO_MINIMIZE):            
             win32gui.SendMessage(
                 mirror_hwnd, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0
             )
