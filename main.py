@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import win32con
 import win32gui
+from PIL import Image, ImageTk
 
 from iterate import iterate_and_find
 from screenshot import get_hwnd, screenshot
@@ -78,8 +79,18 @@ def show_frame():
                 mirror_hwnd, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0
             )
 
+        img = Image.fromarray(screenshot_array)
+        imgtk = ImageTk.PhotoImage(image=img)
+        lmain.imgtk = imgtk
+        lmain.configure(image=imgtk)
+        
         # display the mirror image in the window
         cv2.imshow(MIRROR_WIN_NAME, screenshot_array)
+
+        
+        
+        
+
 
         lmain.after(DELAY_MIRRORING, show_frame)  # TODO: key press Q check
 
