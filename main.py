@@ -8,6 +8,9 @@ import win32gui
 from iterate import iterate_and_find
 from screenshot import get_hwnd, screenshot
 
+import tkinter as tk
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("window_name", type=str, help="A string argument")
 parser.add_argument('--disable-auto-popup', action='store_true')
@@ -23,23 +26,33 @@ DO_POPUP = not args.disable_auto_popup
 MIRROR_WIN_NAME = f"Mirror - [{args.window_name}]"
 DELAY_MIRRORING = 250
 DELAY_NOTHING = 1000
-# create a window to display the mirror image
-cv2.namedWindow(MIRROR_WIN_NAME, cv2.WINDOW_NORMAL)
-cv2.setWindowProperty(MIRROR_WIN_NAME, cv2.WND_PROP_TOPMOST, 1)
+
+
+window = tk.Tk()  # Makes main window
+window.wm_title(MIRROR_WIN_NAME)  # TODO: add resizable, add topmost
+
+lmain = tk.Label(window)
+lmain.pack()
+
 hwnd = get_hwnd(args.window_name)
 mirror_hwnd = get_hwnd(MIRROR_WIN_NAME)
 x = y = w = h = None
 prev_shot = None
 # loop over the frames
-while True:
+
+
+def show_frame():
+    global prev_shot
+    global hwnd
+    
     # capture a screenshot of the screen
     shot = screenshot(hwnd)
     if shot is None:
         print(
             "Can't find the window. Check if the name is correct or try "
             "running as admin."
-        )
-        cv2.waitKey(DELAY_NOTHING)
+        )        
+        lmain.after(DELAY_NOTHING, show_frame)
 
     elif shot == "focused":
         print("The window is focused.")
@@ -49,12 +62,12 @@ while True:
                 mirror_hwnd, win32con.WM_SYSCOMMAND, win32con.SC_MINIMIZE, 0
             )
 
-        cv2.waitKey(DELAY_NOTHING)
+        lmain.after(DELAY_NOTHING, show_frame)
 
     elif shot == "not enough image data":
         print(f"Looking through all the windows that contain '{args.window_name}'")
         hwnd = iterate_and_find(args.window_name)
-        cv2.waitKey(DELAY_NOTHING)
+        lmain.after(DELAY_NOTHING, show_frame)
 
     else:
         # convert the screenshot to a NumPy array
@@ -68,9 +81,11 @@ while True:
         # display the mirror image in the window
         cv2.imshow(MIRROR_WIN_NAME, screenshot_array)
 
-        # wait for a key press to exit the program
-        if cv2.waitKey(DELAY_MIRRORING) == ord("q"):
-            break
+        lmain.after(DELAY_MIRRORING, show_frame)  # TODO: key press Q check
+
     prev_shot = shot
-# release the window and exit the program
-cv2.destroyAllWindows()
+
+
+show_frame()
+window.mainloop()
+
