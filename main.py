@@ -30,7 +30,10 @@ DELAY_NOTHING = 1000
 
 
 window = tk.Tk()  # Makes main window
-window.wm_title(MIRROR_WIN_NAME)  # TODO: add resizable, add topmost
+window.wm_title(MIRROR_WIN_NAME)  # TODO: add resizable
+window.geometry("50x50")
+window.attributes('-topmost',True)
+
 
 lmain = tk.Label(window)
 lmain.pack()
@@ -80,16 +83,13 @@ def show_frame():
             )
 
         img = Image.fromarray(np.array(shot))
-        imgtk = ImageTk.PhotoImage(image=img)
+        resized = img.resize((window.winfo_width(), window.winfo_height()), Image.NEAREST)
+        imgtk = ImageTk.PhotoImage(image=resized)
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
 
         # display the mirror image in the window
         # cv2.imshow(MIRROR_WIN_NAME, screenshot_array)
-
-        
-        
-        
 
 
         lmain.after(DELAY_MIRRORING, show_frame)  # TODO: key press Q check
