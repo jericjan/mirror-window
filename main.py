@@ -1,16 +1,11 @@
 import argparse
+from tkinter import Label, Menu, Tk
 
-import cv2
 import numpy as np
-import win32con
-import win32gui
 from PIL import Image, ImageTk
 
 from iterate import iterate_and_find
 from screenshot import get_hwnd, screenshot
-
-import tkinter as tk
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument("window_name", type=str, help="A string argument")
@@ -29,17 +24,17 @@ DELAY_MIRRORING = 250
 DELAY_NOTHING = 1000
 
 
-window = tk.Tk()  # Makes main window
+window = Tk()  # Makes main window
 window.wm_title(MIRROR_WIN_NAME)  # TODO: add resizable
 window.geometry("50x50")
-window.attributes('-topmost',True)
+window.attributes('-topmost', True)
 
 
-lmain = tk.Label(window)
+lmain = Label(window)
 lmain.pack()
 
 hwnd = get_hwnd(args.window_name)
-mirror_hwnd = get_hwnd(MIRROR_WIN_NAME)
+# mirror_hwnd = window.winfo_id()  # get_hwnd(MIRROR_WIN_NAME)
 x = y = w = h = None
 prev_shot = None
 # loop over the frames
@@ -62,9 +57,8 @@ def show_frame():
         print("The window is focused.")
 
         if type(prev_shot).__name__ == "Image" and DO_MINIMIZE:
-            win32gui.SendMessage(
-                mirror_hwnd, win32con.WM_SYSCOMMAND, win32con.SC_MINIMIZE, 0
-            )
+            print("MINIMIZING")
+            window.iconify()
 
         lmain.after(DELAY_NOTHING, show_frame)
 
@@ -74,29 +68,47 @@ def show_frame():
         lmain.after(DELAY_NOTHING, show_frame)
 
     else:
-        # convert the screenshot to a NumPy array
-        # screenshot_array = cv2.cvtColor(np.array(shot), cv2.COLOR_RGB2BGR)
 
         if prev_shot == "focused" and (DO_POPUP or not DO_MINIMIZE):            
-            win32gui.SendMessage(
-                mirror_hwnd, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0
-            )
+            print("POPPING UP ", mirror_hwnd)
 
-        img = Image.fromarray(np.array(shot))
-        resized = img.resize((window.winfo_width(), window.winfo_height()), Image.NEAREST)
-        imgtk = ImageTk.PhotoImage(image=resized)
+            window.deiconify()
+
+        img = Image.fromarray(np.array(shot))        
+        img.thumbnail((window.winfo_width(), window.winfo_height())) 
+
+        imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
 
-        # display the mirror image in the window
-        # cv2.imshow(MIRROR_WIN_NAME, screenshot_array)
 
 
-        lmain.after(DELAY_MIRRORING, show_frame)  # TODO: key press Q check
+
+        lmain.after(DELAY_MIRRORING, show_frame)
 
     prev_shot = shot
 
 
+def toggle_autopopup():
+    global DO_POPUP
+    DO_POPUP = not DO_POPUP
+
+
+def toggle_minimize():
+    global DO_MINIMIZE
+    DO_MINIMIZE = not DO_MINIMIZE
+
+
+menubar = Menu(window)
+filemenu = Menu(menubar, tearoff=0)
+filemenu.add_command(label="Switch window")  # command=func_Here
+filemenu.add_command(label="Toggle auto-popup", command=toggle_autopopup)
+filemenu.add_command(label="Toggle auto-minimize", command=toggle_minimize)
+filemenu.add_separator()
+filemenu.add_command(label="Exit", command=window.quit)
+menubar.add_cascade(label="Settings", menu=filemenu)
+
 show_frame()
+window.config(menu=menubar)
 window.mainloop()
 
