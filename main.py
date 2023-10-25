@@ -72,20 +72,20 @@ def show_frame():
 
     else:
         # convert the screenshot to a NumPy array
-        screenshot_array = cv2.cvtColor(np.array(shot), cv2.COLOR_RGB2BGR)
+        # screenshot_array = cv2.cvtColor(np.array(shot), cv2.COLOR_RGB2BGR)
 
         if prev_shot == "focused" and (DO_POPUP or not DO_MINIMIZE):            
             win32gui.SendMessage(
                 mirror_hwnd, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0
             )
 
-        img = Image.fromarray(screenshot_array)
+        img = Image.fromarray(np.array(shot))
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
-        
+
         # display the mirror image in the window
-        cv2.imshow(MIRROR_WIN_NAME, screenshot_array)
+        # cv2.imshow(MIRROR_WIN_NAME, screenshot_array)
 
         
         
