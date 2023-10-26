@@ -1,11 +1,12 @@
 import argparse
-from tkinter import Label, Menu, Tk
+from tkinter import Label, Menu, Tk, Toplevel, Listbox, Button, END, simpledialog
 
 import numpy as np
 from PIL import Image, ImageTk
 
 from iterate import iterate_and_find
 from screenshot import get_hwnd, screenshot
+from classes import JSONHandler
 
 parser = argparse.ArgumentParser()
 parser.add_argument("window_name", type=str, help="A string argument")
@@ -24,6 +25,7 @@ MIRROR_WIN_NAME = f"Mirror - [{args.window_name}]"
 DELAY_MIRRORING = 250
 DELAY_NOTHING = 1000
 
+json_handler = JSONHandler("settings.json")
 
 window = Tk()  # Makes main window
 window.wm_title(MIRROR_WIN_NAME)  # TODO: add resizable
@@ -94,9 +96,51 @@ def toggle_minimize(menu):
     menu.entryconfigure(2, label=f"Enable auto-minimize: {DO_MINIMIZE}")
 
 
+
+def switch_window():
+    # TODO: create json
+    # TODO: add popup for input of new stuff
+    window.attributes("-topmost", False)
+
+    def add_item(listbox):
+        # Prompt the user for input
+        new_item = simpledialog.askstring("Add Item", "Enter a window name:")
+
+        # Add the new item to the Listbox
+        if new_item:
+            listbox.insert(END, new_item)
+
+        json_handler.add(new_item)
+
+    popup = Toplevel(window)
+    popup.title("Popup Window")
+
+    # Create a Listbox widget
+    listbox = Listbox(popup)
+    listbox.pack()
+
+    # Add items to the Listbox
+    dic = json_handler.read()
+    window_names = dic[json_handler.key]    
+    for item in window_names:
+        listbox.insert(END, item)
+
+    # Create the "Use" button
+    use_button = Button(popup, text="Use")
+    use_button.pack()
+
+    # Create the "Add" button
+    add_button = Button(popup, text="Add", command=lambda: add_item(listbox))
+    add_button.pack()
+
+    remove_button = Button(popup, text="Remove")
+    remove_button.pack()
+
+    window.attributes("-topmost", True)
+
 menubar = Menu(window)
 filemenu = Menu(menubar, tearoff=0)
-filemenu.add_command(label="Switch window")  # command=func_Here
+filemenu.add_command(label="Switch window", command=switch_window)  # command=func_Here
 filemenu.add_command(label=f"Enable auto-popup: {DO_POPUP}", command=lambda: toggle_autopopup(filemenu))
 filemenu.add_command(label=f"Enable auto-minimize: {DO_MINIMIZE}", command=lambda: toggle_minimize(filemenu))
 filemenu.add_separator()
