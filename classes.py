@@ -36,17 +36,17 @@ class JSONHandler:
             print(f"Error writing data to file '{self.file_path}'.")
 
     def add(self, name):
-        try: 
-            dic = self.read()            
+        try:
+            dic = self.read()
             dic[self.key].append(name)
-            self.write(dic)            
+            self.write(dic)
         except Exception as e:
             print(f"JSON add error: {e}")
 
     def remove(self, index):
-        try: 
-            dic = self.read()            
+        try:
+            dic = self.read()
             dic[self.key].pop(index)
-            self.write(dic)            
+            self.write(dic)
         except Exception as e:
-            print(f"JSON remove error: {e}")            
+            print(f"JSON remove error: {e}")

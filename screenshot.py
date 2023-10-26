@@ -32,7 +32,7 @@ def screenshot(hwnd):
     try:
         left, top, right, bot = win32gui.GetWindowRect(hwnd)
     except pywintypes.error as e:
-        print("GetWindowRect error:\n"+e)
+        print(f"GetWindowRect error:\n{e}")
         return
     w = right - left
     h = bot - top

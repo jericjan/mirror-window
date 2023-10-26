@@ -20,8 +20,8 @@ print(f"Disable auto popup: {args.disable_minimize}")
 DO_MINIMIZE = not args.disable_minimize
 DO_POPUP = not args.disable_auto_popup
 
-
-MIRROR_WIN_NAME = f"Mirror - [{args.window_name}]"
+WIN_NAME = args.window_name
+MIRROR_WIN_NAME = f"Mirror - [{WIN_NAME}]"
 DELAY_MIRRORING = 250
 DELAY_NOTHING = 1000
 
@@ -35,14 +35,21 @@ window.attributes("-topmost", True)
 lmain = Label(window)
 lmain.pack()
 
-hwnd = get_hwnd(args.window_name)
+
 x = y = w = h = None
 prev_shot = None
+
+HWND_CHANGED = True
 
 
 def show_frame():
     global prev_shot
     global hwnd
+    global HWND_CHANGED
+
+    if HWND_CHANGED:
+        hwnd = get_hwnd(WIN_NAME)
+        HWND_CHANGED = False
 
     # capture a screenshot of the screen
     shot = screenshot(hwnd)
@@ -86,22 +93,23 @@ def show_frame():
 
 def toggle_autopopup(menu):
     global DO_POPUP
-    DO_POPUP = not DO_POPUP    
+    DO_POPUP = not DO_POPUP
     menu.entryconfigure(1, label=f"Enable auto-popup: {DO_POPUP}")
 
 
 def toggle_minimize(menu):
     global DO_MINIMIZE
-    DO_MINIMIZE = not DO_MINIMIZE    
+    DO_MINIMIZE = not DO_MINIMIZE
     menu.entryconfigure(2, label=f"Enable auto-minimize: {DO_MINIMIZE}")
 
 
 def switch_window():    
-    # TODO: add popup for input of new stuff    
 
     def add_item(listbox):
         # Prompt the user for input
-        new_item = simpledialog.askstring("Add Item", "Enter a window name:", parent=listbox)
+        new_item = simpledialog.askstring(
+            "Add Item", "Enter a window name:", parent=listbox
+        )
 
         # Add the new item to the Listbox
         if new_item:
@@ -118,12 +126,26 @@ def switch_window():
             json_handler.remove(index)
             listbox.delete(index)
         else:
-            print("No item selected.")        
+            print("No item selected.")
+            return
+
+    def use_item(listbox):
+        global WIN_NAME
+        global HWND_CHANGED
+        selected_index = listbox.curselection()
+        if selected_index:
+            index = selected_index[0]
+            item = listbox.get(index)
+            print("Selected item:", item)
+            WIN_NAME = item
+            HWND_CHANGED = True
+        else:
+            print("No item selected.")
             return
 
     popup = Toplevel(window)
     popup.attributes("-topmost", True)
-    popup.title("Popup Window")
+    popup.title("Window Switcher")
 
     # Create a Listbox widget
     listbox = Listbox(popup)
@@ -131,12 +153,12 @@ def switch_window():
 
     # Add items to the Listbox
     dic = json_handler.read()
-    window_names = dic[json_handler.key]    
+    window_names = dic[json_handler.key]
     for item in window_names:
         listbox.insert(END, item)
 
     # Create the "Use" button
-    use_button = Button(popup, text="Use")
+    use_button = Button(popup, text="Use", command=lambda: use_item(listbox))
     use_button.pack()
 
     # Create the "Add" button
@@ -145,13 +167,18 @@ def switch_window():
 
     remove_button = Button(popup, text="Remove", command=lambda: remove_item(listbox))
     remove_button.pack()
-    
+
 
 menubar = Menu(window)
 filemenu = Menu(menubar, tearoff=0)
 filemenu.add_command(label="Switch window", command=switch_window)  # command=func_Here
-filemenu.add_command(label=f"Enable auto-popup: {DO_POPUP}", command=lambda: toggle_autopopup(filemenu))
-filemenu.add_command(label=f"Enable auto-minimize: {DO_MINIMIZE}", command=lambda: toggle_minimize(filemenu))
+filemenu.add_command(
+    label=f"Enable auto-popup: {DO_POPUP}", command=lambda: toggle_autopopup(filemenu)
+)
+filemenu.add_command(
+    label=f"Enable auto-minimize: {DO_MINIMIZE}",
+    command=lambda: toggle_minimize(filemenu),
+)
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="Settings", menu=filemenu)
