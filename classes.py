@@ -42,3 +42,11 @@ class JSONHandler:
             self.write(dic)            
         except Exception as e:
             print(f"JSON add error: {e}")
+
+    def remove(self, index):
+        try: 
+            dic = self.read()            
+            dic[self.key].pop(index)
+            self.write(dic)            
+        except Exception as e:
+            print(f"JSON remove error: {e}")            

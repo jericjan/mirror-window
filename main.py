@@ -29,7 +29,7 @@ json_handler = JSONHandler("settings.json")
 
 window = Tk()  # Makes main window
 window.wm_title(MIRROR_WIN_NAME)  # TODO: add resizable
-window.geometry("50x50")
+window.geometry("500x500")
 window.attributes("-topmost", True)
 
 lmain = Label(window)
@@ -96,15 +96,12 @@ def toggle_minimize(menu):
     menu.entryconfigure(2, label=f"Enable auto-minimize: {DO_MINIMIZE}")
 
 
-
-def switch_window():
-    # TODO: create json
-    # TODO: add popup for input of new stuff
-    window.attributes("-topmost", False)
+def switch_window():    
+    # TODO: add popup for input of new stuff    
 
     def add_item(listbox):
         # Prompt the user for input
-        new_item = simpledialog.askstring("Add Item", "Enter a window name:")
+        new_item = simpledialog.askstring("Add Item", "Enter a window name:", parent=listbox)
 
         # Add the new item to the Listbox
         if new_item:
@@ -112,7 +109,20 @@ def switch_window():
 
         json_handler.add(new_item)
 
+    def remove_item(listbox):
+        selected_index = listbox.curselection()
+        if selected_index:
+            index = selected_index[0]
+            item = listbox.get(index)
+            print("Selected item:", item)
+            json_handler.remove(index)
+            listbox.delete(index)
+        else:
+            print("No item selected.")        
+            return
+
     popup = Toplevel(window)
+    popup.attributes("-topmost", True)
     popup.title("Popup Window")
 
     # Create a Listbox widget
@@ -133,10 +143,9 @@ def switch_window():
     add_button = Button(popup, text="Add", command=lambda: add_item(listbox))
     add_button.pack()
 
-    remove_button = Button(popup, text="Remove")
+    remove_button = Button(popup, text="Remove", command=lambda: remove_item(listbox))
     remove_button.pack()
-
-    window.attributes("-topmost", True)
+    
 
 menubar = Menu(window)
 filemenu = Menu(menubar, tearoff=0)

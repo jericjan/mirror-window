@@ -16,10 +16,10 @@ def get_hwnd(window_name):
 
 
 def screenshot(hwnd):
-    print(f"Window ID: {hwnd}", end=", ")
+    # print(f"Window ID: {hwnd}", end=", ")
 
     focused = is_window_focused(hwnd)
-    print(f"Focused: {focused}")
+    # print(f"Focused: {focused}")
     if focused:
         return "focused"
 
@@ -50,7 +50,7 @@ def screenshot(hwnd):
     # or just the client area.
     # result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 1)
     result = windll.user32.PrintWindow(hwnd, saveDC.GetSafeHdc(), 2)
-    print(f"PrintWindow result: {result}")
+    # print(f"PrintWindow result: {result}")
 
     bmpinfo = saveBitMap.GetInfo()
     bmpstr = saveBitMap.GetBitmapBits(True)
