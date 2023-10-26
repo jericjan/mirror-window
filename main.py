@@ -1,5 +1,5 @@
 import argparse
-from tkinter import Label, Menu, Tk
+from tkinter import Label, Menu, Tk, StringVar
 
 import numpy as np
 from PIL import Image, ImageTk
@@ -9,8 +9,8 @@ from screenshot import get_hwnd, screenshot
 
 parser = argparse.ArgumentParser()
 parser.add_argument("window_name", type=str, help="A string argument")
-parser.add_argument('--disable-auto-popup', action='store_true')
-parser.add_argument('--disable-minimize', action='store_true')
+parser.add_argument("--disable-auto-popup", action="store_true")
+parser.add_argument("--disable-minimize", action="store_true")
 args = parser.parse_args()
 
 print(f"Disable auto popup: {args.disable_auto_popup}")
@@ -18,6 +18,7 @@ print(f"Disable auto popup: {args.disable_minimize}")
 
 DO_MINIMIZE = not args.disable_minimize
 DO_POPUP = not args.disable_auto_popup
+
 
 MIRROR_WIN_NAME = f"Mirror - [{args.window_name}]"
 DELAY_MIRRORING = 250
@@ -27,7 +28,11 @@ DELAY_NOTHING = 1000
 window = Tk()  # Makes main window
 window.wm_title(MIRROR_WIN_NAME)  # TODO: add resizable
 window.geometry("50x50")
-window.attributes('-topmost', True)
+window.attributes("-topmost", True)
+
+POPUP_MSG = StringVar(window, name="popup_msg", value=f"Enable auto-popup: {DO_POPUP}")
+
+MIN_MSG = StringVar(window, name="minimize_msg", value=f"Enable auto-minimize: {DO_MINIMIZE}")
 
 
 lmain = Label(window)
@@ -43,14 +48,14 @@ prev_shot = None
 def show_frame():
     global prev_shot
     global hwnd
-    
+
     # capture a screenshot of the screen
     shot = screenshot(hwnd)
     if shot is None:
         print(
             "Can't find the window. Check if the name is correct or try "
             "running as admin."
-        )        
+        )
         lmain.after(DELAY_NOTHING, show_frame)
 
     elif shot == "focused":
@@ -68,42 +73,39 @@ def show_frame():
         lmain.after(DELAY_NOTHING, show_frame)
 
     else:
-
-        if prev_shot == "focused" and (DO_POPUP or not DO_MINIMIZE):            
-            print("POPPING UP ", mirror_hwnd)
-
+        if prev_shot == "focused" and (DO_POPUP or not DO_MINIMIZE):
+            print("POPPING UP ")
             window.deiconify()
 
-        img = Image.fromarray(np.array(shot))        
-        img.thumbnail((window.winfo_width(), window.winfo_height())) 
+        img = Image.fromarray(np.array(shot))
+        img.thumbnail((window.winfo_width(), window.winfo_height()))
 
         imgtk = ImageTk.PhotoImage(image=img)
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
-
-
-
 
         lmain.after(DELAY_MIRRORING, show_frame)
 
     prev_shot = shot
 
 
-def toggle_autopopup():
+def toggle_autopopup(menu):
     global DO_POPUP
-    DO_POPUP = not DO_POPUP
+    DO_POPUP = not DO_POPUP    
+    menu.entryconfigure(1, label=f"Enable auto-popup: {DO_POPUP}")
 
 
-def toggle_minimize():
+def toggle_minimize(menu):
     global DO_MINIMIZE
-    DO_MINIMIZE = not DO_MINIMIZE
+    DO_MINIMIZE = not DO_MINIMIZE    
+    menu.entryconfigure(2, label=f"Enable auto-minimize: {DO_MINIMIZE}")
 
 
 menubar = Menu(window)
 filemenu = Menu(menubar, tearoff=0)
 filemenu.add_command(label="Switch window")  # command=func_Here
-filemenu.add_command(label="Toggle auto-popup", command=toggle_autopopup)
-filemenu.add_command(label="Toggle auto-minimize", command=toggle_minimize)
+filemenu.add_command(label=POPUP_MSG.get(), command=lambda: toggle_autopopup(filemenu))
+filemenu.add_command(label=MIN_MSG.get(), command=lambda: toggle_minimize(filemenu))
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="Settings", menu=filemenu)
@@ -111,4 +113,3 @@ menubar.add_cascade(label="Settings", menu=filemenu)
 show_frame()
 window.config(menu=menubar)
 window.mainloop()
-
