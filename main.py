@@ -33,7 +33,7 @@ window.geometry("500x500")
 window.attributes("-topmost", True)
 
 lmain = Label(window)
-lmain.pack()
+lmain.pack(anchor="center", expand=True)
 
 
 x = y = w = h = None
@@ -61,7 +61,7 @@ def show_frame():
         lmain.after(DELAY_NOTHING, show_frame)
 
     elif shot == "focused":
-        print("The window is focused.")
+        # print("The window is focused.")
 
         if type(prev_shot).__name__ == "Image" and DO_MINIMIZE:
             print("MINIMIZING")
@@ -153,7 +153,7 @@ def switch_window():
 
     # Add items to the Listbox
     dic = json_handler.read()
-    window_names = dic[json_handler.key]
+    window_names = dic[json_handler.key]  # TODO: rewrite this
     for item in window_names:
         listbox.insert(END, item)
 
