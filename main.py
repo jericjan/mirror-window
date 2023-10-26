@@ -1,5 +1,5 @@
 import argparse
-from tkinter import Label, Menu, Tk, StringVar
+from tkinter import Label, Menu, Tk
 
 import numpy as np
 from PIL import Image, ImageTk
@@ -30,19 +30,12 @@ window.wm_title(MIRROR_WIN_NAME)  # TODO: add resizable
 window.geometry("50x50")
 window.attributes("-topmost", True)
 
-POPUP_MSG = StringVar(window, name="popup_msg", value=f"Enable auto-popup: {DO_POPUP}")
-
-MIN_MSG = StringVar(window, name="minimize_msg", value=f"Enable auto-minimize: {DO_MINIMIZE}")
-
-
 lmain = Label(window)
 lmain.pack()
 
 hwnd = get_hwnd(args.window_name)
-# mirror_hwnd = window.winfo_id()  # get_hwnd(MIRROR_WIN_NAME)
 x = y = w = h = None
 prev_shot = None
-# loop over the frames
 
 
 def show_frame():
@@ -104,8 +97,8 @@ def toggle_minimize(menu):
 menubar = Menu(window)
 filemenu = Menu(menubar, tearoff=0)
 filemenu.add_command(label="Switch window")  # command=func_Here
-filemenu.add_command(label=POPUP_MSG.get(), command=lambda: toggle_autopopup(filemenu))
-filemenu.add_command(label=MIN_MSG.get(), command=lambda: toggle_minimize(filemenu))
+filemenu.add_command(label=f"Enable auto-popup: {DO_POPUP}", command=lambda: toggle_autopopup(filemenu))
+filemenu.add_command(label=f"Enable auto-minimize: {DO_MINIMIZE}", command=lambda: toggle_minimize(filemenu))
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="Settings", menu=filemenu)
