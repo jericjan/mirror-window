@@ -146,8 +146,8 @@ def show_frame():
         lmain.after(DELAY_NOTHING, show_frame)
 
     elif shot == "not enough image data":
-        print(f"Looking through all the windows that contain '{args.window_name}'")
-        hwnd = iterate_and_find(args.window_name)
+        print(f"Looking through all the windows that contain '{WIN_NAME}'")
+        hwnd = iterate_and_find(WIN_NAME)
         lmain.after(DELAY_NOTHING, show_frame)
 
     else:
