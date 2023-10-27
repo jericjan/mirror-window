@@ -29,8 +29,10 @@ json_handler = JSONHandler("settings.json")
 
 window = Tk()  # Makes main window
 
-def update_title():    
+
+def update_title():
     window.wm_title(f"Mirror - [{WIN_NAME}]")
+
 
 update_title()
 window.geometry("500x500")
@@ -44,6 +46,7 @@ x = y = w = h = None
 prev_shot = None
 
 HWND_CHANGED = True
+
 
 def show_frame():
     global prev_shot
@@ -106,8 +109,7 @@ def toggle_minimize(menu):
     menu.entryconfigure(2, label=f"Enable auto-minimize: {DO_MINIMIZE}")
 
 
-def switch_window():    
-
+def switch_window():
     def add_item(listbox):
         # Prompt the user for input
         new_item = simpledialog.askstring(
@@ -151,7 +153,7 @@ def switch_window():
         popup = Toplevel(window, name="window_switcher")
         popup.attributes("-topmost", True)
         popup.title("Window Switcher")
-        popup.geometry('265x251')
+        popup.geometry("265x251")
 
         # Create a Listbox widget
         listbox = Listbox(popup)
@@ -171,10 +173,13 @@ def switch_window():
         add_button = Button(popup, text="Add", command=lambda: add_item(listbox))
         add_button.pack()
 
-        remove_button = Button(popup, text="Remove", command=lambda: remove_item(listbox))
+        remove_button = Button(
+            popup, text="Remove", command=lambda: remove_item(listbox)
+        )
         remove_button.pack()
     else:
-        window.children['window_switcher'].deiconify()
+        window.children["window_switcher"].deiconify()
+
 
 menubar = Menu(window)
 filemenu = Menu(menubar, tearoff=0)
