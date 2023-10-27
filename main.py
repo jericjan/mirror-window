@@ -84,6 +84,7 @@ window.attributes("-topmost", True)
 
 lmain = Label(window)
 lmain.pack(anchor="center", expand=True)
+status_text = Label(window)
 
 
 x = y = w = h = None
@@ -93,9 +94,14 @@ HWND_CHANGED = True
 
 
 def show_frame():
+
     global prev_shot
     global hwnd
     global HWND_CHANGED
+    global status_text
+
+    if prev_shot is None:
+        status_text.pack_forget()
 
     if HWND_CHANGED:
         json_handler.set_current("window", WIN_NAME)
@@ -109,6 +115,14 @@ def show_frame():
             "Can't find the window. Check if the name is correct or try "
             "running as admin."
         )
+        
+        lmain.imgtk = None
+        status_text.configure(
+            text="Can't find the window. Check if the name is correct or try "
+            "running as admin."
+        )
+        status_text.pack(before=lmain)
+
         lmain.after(DELAY_NOTHING, show_frame)
 
     elif shot == "focused":
