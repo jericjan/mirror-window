@@ -1,3 +1,5 @@
 __pycache__/
 .vscode/
+.venv2/
 *.lnk
+settings.json
