@@ -8,6 +8,7 @@ from iterate import iterate_and_find
 from screenshot import get_hwnd, screenshot
 from classes import JSONHandler
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("window_name", type=str, help="A string argument")
 parser.add_argument("--disable-auto-popup", action="store_true")
@@ -21,14 +22,17 @@ DO_MINIMIZE = not args.disable_minimize
 DO_POPUP = not args.disable_auto_popup
 
 WIN_NAME = args.window_name
-MIRROR_WIN_NAME = f"Mirror - [{WIN_NAME}]"
 DELAY_MIRRORING = 250
 DELAY_NOTHING = 1000
 
 json_handler = JSONHandler("settings.json")
 
 window = Tk()  # Makes main window
-window.wm_title(MIRROR_WIN_NAME)  # TODO: add resizable
+
+def update_title():    
+    window.wm_title(f"Mirror - [{WIN_NAME}]")
+
+update_title()
 window.geometry("500x500")
 window.attributes("-topmost", True)
 
@@ -40,7 +44,6 @@ x = y = w = h = None
 prev_shot = None
 
 HWND_CHANGED = True
-
 
 def show_frame():
     global prev_shot
@@ -139,35 +142,39 @@ def switch_window():
             print("Selected item:", item)
             WIN_NAME = item
             HWND_CHANGED = True
+            update_title()
         else:
             print("No item selected.")
             return
 
-    popup = Toplevel(window)
-    popup.attributes("-topmost", True)
-    popup.title("Window Switcher")
+    if "window_switcher" not in window.children:
+        popup = Toplevel(window, name="window_switcher")
+        popup.attributes("-topmost", True)
+        popup.title("Window Switcher")
+        popup.geometry('265x251')
 
-    # Create a Listbox widget
-    listbox = Listbox(popup)
-    listbox.pack()
+        # Create a Listbox widget
+        listbox = Listbox(popup)
+        listbox.pack()
 
-    # Add items to the Listbox
-    dic = json_handler.read()
-    window_names = dic[json_handler.key]  # TODO: rewrite this
-    for item in window_names:
-        listbox.insert(END, item)
+        # Add items to the Listbox
+        dic = json_handler.read()
+        window_names = dic[json_handler.key]  # TODO: rewrite this
+        for item in window_names:
+            listbox.insert(END, item)
 
-    # Create the "Use" button
-    use_button = Button(popup, text="Use", command=lambda: use_item(listbox))
-    use_button.pack()
+        # Create the "Use" button
+        use_button = Button(popup, text="Use", command=lambda: use_item(listbox))
+        use_button.pack()
 
-    # Create the "Add" button
-    add_button = Button(popup, text="Add", command=lambda: add_item(listbox))
-    add_button.pack()
+        # Create the "Add" button
+        add_button = Button(popup, text="Add", command=lambda: add_item(listbox))
+        add_button.pack()
 
-    remove_button = Button(popup, text="Remove", command=lambda: remove_item(listbox))
-    remove_button.pack()
-
+        remove_button = Button(popup, text="Remove", command=lambda: remove_item(listbox))
+        remove_button.pack()
+    else:
+        window.children['window_switcher'].deiconify()
 
 menubar = Menu(window)
 filemenu = Menu(menubar, tearoff=0)
@@ -186,3 +193,12 @@ menubar.add_cascade(label="Settings", menu=filemenu)
 show_frame()
 window.config(menu=menubar)
 window.mainloop()
+
+# def print_size():
+#     while True:
+#         x = popup.winfo_width()
+#         y = popup.winfo_height()
+#         print(x, y)
+
+# t1 = threading.Thread(target=print_size)
+# t1.start()
