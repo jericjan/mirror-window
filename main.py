@@ -9,6 +9,7 @@ from tkinter import (
     END,
     simpledialog,
     messagebox,
+    Frame,
 )
 
 import numpy as np
@@ -84,8 +85,23 @@ window.attributes("-topmost", True)
 
 lmain = Label(window)
 lmain.pack(anchor="center", expand=True)
-status_text = Label(window)
 
+error_frame = Frame(window)
+status_text = Label(
+    error_frame,
+    text="Can't find the window. Check if the name is correct or try "
+    "running as admin.",
+)
+status_text.pack()
+
+
+def refresh():
+    global HWND_CHANGED
+    HWND_CHANGED = True
+
+
+refresh_button = Button(error_frame, text="Refresh", command=refresh)
+refresh_button.pack()
 
 x = y = w = h = None
 prev_shot = None
@@ -94,14 +110,13 @@ HWND_CHANGED = True
 
 
 def show_frame():
-
     global prev_shot
     global hwnd
     global HWND_CHANGED
     global status_text
 
     if prev_shot is None:
-        status_text.pack_forget()
+        error_frame.pack_forget()
 
     if HWND_CHANGED:
         json_handler.set_current("window", WIN_NAME)
@@ -115,13 +130,9 @@ def show_frame():
             "Can't find the window. Check if the name is correct or try "
             "running as admin."
         )
-        
+
         lmain.imgtk = None
-        status_text.configure(
-            text="Can't find the window. Check if the name is correct or try "
-            "running as admin."
-        )
-        status_text.pack(before=lmain)
+        error_frame.pack(before=lmain)
 
         lmain.after(DELAY_NOTHING, show_frame)
 
