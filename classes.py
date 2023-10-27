@@ -5,9 +5,12 @@ from pathlib import Path
 class JSONHandler:
     def __init__(self, file_path):
         self.file_path = file_path
-        self.key = "window_names"
+        self.window_names = "window_names"
         if not Path(file_path).exists():
-            data = {self.key: []}
+            data = {
+                self.window_names: [],
+                "current": {"window": "", "auto_popup": True, "auto_minimize": False},
+            }
             try:
                 with open(file_path, "w") as file:
                     json.dump(data, file, indent=4)
@@ -38,7 +41,7 @@ class JSONHandler:
     def add(self, name):
         try:
             dic = self.read()
-            dic[self.key].append(name)
+            dic[self.window_names].append(name)
             self.write(dic)
         except Exception as e:
             print(f"JSON add error: {e}")
@@ -46,7 +49,12 @@ class JSONHandler:
     def remove(self, index):
         try:
             dic = self.read()
-            dic[self.key].pop(index)
+            dic[self.window_names].pop(index)
             self.write(dic)
         except Exception as e:
             print(f"JSON remove error: {e}")
+
+    def get_window_names(self):
+        dic = self.read()
+        window_names = dic[self.window_names]
+        return window_names

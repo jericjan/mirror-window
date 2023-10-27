@@ -1,5 +1,5 @@
 import argparse
-from tkinter import Label, Menu, Tk, Toplevel, Listbox, Button, END, simpledialog
+from tkinter import Label, Menu, Tk, Toplevel, Listbox, Button, END, simpledialog, messagebox
 
 import numpy as np
 from PIL import Image, ImageTk
@@ -10,7 +10,9 @@ from classes import JSONHandler
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("window_name", type=str, help="A string argument")
+parser.add_argument(
+    "window_name", type=str, help="A string argument", default=None, nargs="?"
+)
 parser.add_argument("--disable-auto-popup", action="store_true")
 parser.add_argument("--disable-minimize", action="store_true")
 args = parser.parse_args()
@@ -159,9 +161,8 @@ def switch_window():
         listbox = Listbox(popup)
         listbox.pack()
 
-        # Add items to the Listbox
-        dic = json_handler.read()
-        window_names = dic[json_handler.key]  # TODO: rewrite this
+        # Add items to the Listbox        
+        window_names = json_handler.get_window_names()
         for item in window_names:
             listbox.insert(END, item)
 
@@ -181,9 +182,13 @@ def switch_window():
         window.children["window_switcher"].deiconify()
 
 
+if WIN_NAME is None:
+    messagebox.showinfo("No window selected", "Please select a window to be mirrored, or add it if it hasn't been saved yet.")
+    switch_window()
+
 menubar = Menu(window)
 filemenu = Menu(menubar, tearoff=0)
-filemenu.add_command(label="Switch window", command=switch_window)  # command=func_Here
+filemenu.add_command(label="Switch window", command=switch_window)
 filemenu.add_command(
     label=f"Enable auto-popup: {DO_POPUP}", command=lambda: toggle_autopopup(filemenu)
 )
