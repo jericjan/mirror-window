@@ -3,3 +3,4 @@ flake8==6.0.0
 isort==5.12.0
 opencv-python==4.7.0.72
 pywin32==306
+pypiwin32==223
