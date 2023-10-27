@@ -1,5 +1,15 @@
 import argparse
-from tkinter import Label, Menu, Tk, Toplevel, Listbox, Button, END, simpledialog, messagebox
+from tkinter import (
+    Label,
+    Menu,
+    Tk,
+    Toplevel,
+    Listbox,
+    Button,
+    END,
+    simpledialog,
+    messagebox,
+)
 
 import numpy as np
 from PIL import Image, ImageTk
@@ -13,21 +23,53 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "window_name", type=str, help="A string argument", default=None, nargs="?"
 )
-parser.add_argument("--disable-auto-popup", action="store_true")
-parser.add_argument("--disable-minimize", action="store_true")
+parser.add_argument(
+    "--auto-popup", "-p", type=lambda x: x.lower(), choices=["true", "false"], nargs="?"
+)
+
+parser.add_argument(
+    "--auto-minimize",
+    "-m",
+    type=lambda x: x.lower(),
+    choices=["true", "false"],
+    nargs="?",
+)
+
 args = parser.parse_args()
 
-print(f"Disable auto popup: {args.disable_auto_popup}")
-print(f"Disable auto popup: {args.disable_minimize}")
+print(f"auto_popup: {args.auto_popup}")
+print(f"auto_minimize: {args.auto_minimize}")
 
-DO_MINIMIZE = not args.disable_minimize
-DO_POPUP = not args.disable_auto_popup
+json_handler = JSONHandler("settings.json")
 
-WIN_NAME = args.window_name
+DO_MINIMIZE = (
+    True
+    if args.auto_minimize == "true"
+    else False
+    if args.auto_minimize == "false"
+    else json_handler.get_current("auto_minimize")
+)
+
+DO_POPUP = (
+    True
+    if args.auto_popup == "true"
+    else False
+    if args.auto_popup == "false"
+    else json_handler.get_current("auto_popup")
+)
+
+saved_current_win = json_handler.get_current("window")
+WIN_NAME = (
+    args.window_name
+    if args.window_name is not None
+    else saved_current_win
+    if saved_current_win != ""
+    else None
+)
+
 DELAY_MIRRORING = 250
 DELAY_NOTHING = 1000
 
-json_handler = JSONHandler("settings.json")
 
 window = Tk()  # Makes main window
 
@@ -56,6 +98,7 @@ def show_frame():
     global HWND_CHANGED
 
     if HWND_CHANGED:
+        json_handler.set_current("window", WIN_NAME)
         hwnd = get_hwnd(WIN_NAME)
         HWND_CHANGED = False
 
@@ -102,12 +145,14 @@ def show_frame():
 def toggle_autopopup(menu):
     global DO_POPUP
     DO_POPUP = not DO_POPUP
+    json_handler.set_current("auto_popup", DO_POPUP)
     menu.entryconfigure(1, label=f"Enable auto-popup: {DO_POPUP}")
 
 
 def toggle_minimize(menu):
     global DO_MINIMIZE
     DO_MINIMIZE = not DO_MINIMIZE
+    json_handler.set_current("auto_minimize", DO_MINIMIZE)
     menu.entryconfigure(2, label=f"Enable auto-minimize: {DO_MINIMIZE}")
 
 
@@ -161,7 +206,7 @@ def switch_window():
         listbox = Listbox(popup)
         listbox.pack()
 
-        # Add items to the Listbox        
+        # Add items to the Listbox
         window_names = json_handler.get_window_names()
         for item in window_names:
             listbox.insert(END, item)
@@ -183,7 +228,10 @@ def switch_window():
 
 
 if WIN_NAME is None:
-    messagebox.showinfo("No window selected", "Please select a window to be mirrored, or add it if it hasn't been saved yet.")
+    messagebox.showinfo(
+        "No window selected",
+        "Please select a window to be mirrored, or add it if it hasn't been saved yet.",
+    )
     switch_window()
 
 menubar = Menu(window)

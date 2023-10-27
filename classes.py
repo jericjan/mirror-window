@@ -9,7 +9,7 @@ class JSONHandler:
         if not Path(file_path).exists():
             data = {
                 self.window_names: [],
-                "current": {"window": "", "auto_popup": True, "auto_minimize": False},
+                "current": {"window": "", "auto_popup": True, "auto_minimize": True},
             }
             try:
                 with open(file_path, "w") as file:
@@ -58,3 +58,13 @@ class JSONHandler:
         dic = self.read()
         window_names = dic[self.window_names]
         return window_names
+
+    def set_current(self, key, new_value):
+        dic = self.read()
+        dic["current"][key] = new_value
+        self.write(dic)
+
+    def get_current(self, key):
+        dic = self.read()
+        current_dic = dic["current"]
+        return current_dic[key]
