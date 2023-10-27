@@ -225,7 +225,7 @@ def switch_window():
         popup = Toplevel(window, name="window_switcher")
         popup.attributes("-topmost", True)
         popup.title("Window Switcher")
-        popup.geometry("265x251")
+        popup.geometry(f"265x251+{window.winfo_x()+10}+{window.winfo_y()+50}")
 
         # Create a Listbox widget
         listbox = Listbox(popup)
