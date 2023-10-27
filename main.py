@@ -270,8 +270,16 @@ filemenu.add_command(
     command=lambda: toggle_minimize(filemenu),
 )
 filemenu.add_separator()
+filemenu.add_command(
+    label="Wrong window?",
+    command=lambda: messagebox.showinfo(
+        "Wrong window?",
+        "If you have multiple windows with the same name, simply focus the window you want to mirror and press \"Use\" again.",
+    ),
+)
 filemenu.add_command(label="Exit", command=window.quit)
 menubar.add_cascade(label="Settings", menu=filemenu)
+menubar.add_cascade(label="Refresh", command=refresh)
 
 show_frame()
 window.config(menu=menubar)
