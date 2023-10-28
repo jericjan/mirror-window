@@ -237,8 +237,7 @@ def switch_window():
             listbox.insert(END, item)
 
         # Create the "Use" button
-        use_button = Button(popup, text="Use", command=lambda: use_item(listbox))
-        use_button.pack()
+        listbox.bind('<<ListboxSelect>>', lambda x: use_item(listbox))
 
         # Create the "Add" button
         add_button = Button(popup, text="Add", command=lambda: add_item(listbox))
