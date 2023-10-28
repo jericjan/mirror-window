@@ -151,7 +151,7 @@ def show_frame():
         lmain.after(DELAY_NOTHING, show_frame)
 
     else:
-        if prev_shot == "focused" and (DO_POPUP or not DO_MINIMIZE):
+        if prev_shot == "focused" and DO_POPUP:
             print("POPPING UP ")
             window.deiconify()
 
