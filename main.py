@@ -1,9 +1,8 @@
 import argparse
-import math
-from decimal import Decimal
+from decimal import Decimal, getcontext
 from tkinter import (END, Button, Entry, Frame, IntVar, Label, Listbox, Menu,
                      OptionMenu, StringVar, Tk, Toplevel, messagebox,
-                     simpledialog)
+                     simpledialog, Variable)
 
 import numpy as np
 from PIL import Image, ImageTk
@@ -63,11 +62,11 @@ WIN_NAME = (
 
 def convert_fps_ms(num):
     """Convert fps to milliseconds per frame and vice versa"""
-    return math.floor(1000 / float(num))
+    return Decimal(1000) / Decimal(num)
 
 
-DELAY_MIRRORING = json_handler.get_current("active_delay")
-DELAY_NOTHING = json_handler.get_current("paused_delay")
+DELAY_MIRRORING = json_handler.get_current("active_delay", integer_ratio=True)
+DELAY_NOTHING = json_handler.get_current("paused_delay", integer_ratio=True)
 
 
 window = Tk()  # Makes main window
@@ -132,7 +131,7 @@ def show_frame():
         lmain.imgtk = None
         error_frame.pack(before=lmain)
 
-        lmain.after(DELAY_NOTHING, show_frame)
+        lmain.after(int(DELAY_NOTHING), show_frame)
 
     elif shot == "focused":
         # print("The window is focused.")
@@ -141,12 +140,12 @@ def show_frame():
             print("MINIMIZING")
             window.iconify()
 
-        lmain.after(DELAY_NOTHING, show_frame)
+        lmain.after(int(DELAY_NOTHING), show_frame)
 
     elif shot == "not enough image data":
         print(f"Looking through all the windows that contain '{WIN_NAME}'")
         hwnd = iterate_and_find(WIN_NAME)
-        lmain.after(DELAY_NOTHING, show_frame)
+        lmain.after(int(DELAY_NOTHING), show_frame)
 
     else:
         if prev_shot == "focused" and DO_POPUP:
@@ -160,7 +159,7 @@ def show_frame():
         lmain.imgtk = imgtk
         lmain.configure(image=imgtk)
 
-        lmain.after(DELAY_MIRRORING, show_frame)
+        lmain.after(int(DELAY_MIRRORING), show_frame)
 
     prev_shot = shot
 
@@ -261,14 +260,15 @@ def change_fps():
         p_fps = paused_fps_val.get()
         p_type = paused_fps_type.get()
 
+        getcontext().prec = 28
+
         active_ms = a_fps if a_type == options[1] else convert_fps_ms(a_fps)
         paused_ms = p_fps if p_type == options[1] else convert_fps_ms(p_fps)
-
+        
         DELAY_MIRRORING = active_ms
-        DELAY_NOTHING = paused_ms
-
-        json_handler.set_current("active_delay", active_ms)
-        json_handler.set_current("paused_delay", paused_ms)
+        DELAY_NOTHING = paused_ms        
+        json_handler.set_current("active_delay", active_ms, integer_ratio=True)
+        json_handler.set_current("paused_delay", paused_ms, integer_ratio=True)
 
     if "fps_switcher" not in window.children:
         popup = Toplevel(window, name="fps_switcher")
@@ -284,7 +284,9 @@ def change_fps():
         active_fps_type.set(options[0])
         active_fps_dropdown = OptionMenu(frame1, active_fps_type, *options)
 
-        active_fps_val = IntVar(popup)
+        getcontext().prec = 6
+
+        active_fps_val = Variable(popup)        
         active_fps_val.set(convert_fps_ms(DELAY_MIRRORING))
         active_fps_input = Entry(frame1, textvariable=active_fps_val)
 
@@ -296,7 +298,7 @@ def change_fps():
         paused_fps_type.set(options[0])
         paused_fps_dropdown = OptionMenu(frame2, paused_fps_type, *options)
 
-        paused_fps_val = IntVar(popup)
+        paused_fps_val = Variable(popup)
         paused_fps_val.set(convert_fps_ms(DELAY_NOTHING))
         paused_fps_input = Entry(frame2, textvariable=paused_fps_val)
 

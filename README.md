@@ -3,6 +3,7 @@ Mirror any window into a small always-on-top popout while you do other things on
 
 # TO-DO
 - [ ] add button that lists all windows, in additional to still being able to manually type out the window name
-- [ ] set framerate
+- [ ] possible bug where window_name item is null
+- [x] set framerate
 - [x] remove use button and select automatically
 - [x] auto popup does not stay disabled

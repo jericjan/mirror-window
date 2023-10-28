@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 import copy
-
+from decimal import Decimal, getcontext
 
 def merge_nested_dicts(d1, d2):
     for key, value in d2.items():
@@ -21,8 +21,8 @@ class JSONHandler:
                 "window": "",
                 "auto_popup": True,
                 "auto_minimize": True,
-                "active_delay": 250,
-                "paused_delay": 1000,
+                "active_delay": [250, 1],
+                "paused_delay": [1000, 1],
             },
         }
         if not Path(file_path).exists():
@@ -80,12 +80,20 @@ class JSONHandler:
         window_names = dic[self.window_names]
         return window_names
 
-    def set_current(self, key, new_value):
+    def set_current(self, key, new_value, integer_ratio=False):
         dic = self.read()
-        dic["current"][key] = new_value
+
+        if integer_ratio:
+            getcontext().prec = 28
+            dic["current"][key] = list(new_value.as_integer_ratio())  # TODO: just use type checks instead
+        else:
+            dic["current"][key] = new_value
         self.write(dic)
 
-    def get_current(self, key):
+    def get_current(self, key, integer_ratio=False):
         dic = self.read()
         current_dic = dic["current"]
+        if integer_ratio:
+            return (Decimal(current_dic[key][0]) / Decimal(current_dic[key][1])).normalize()
         return current_dic[key]
+    
