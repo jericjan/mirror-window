@@ -1,22 +1,43 @@
 import json
 from pathlib import Path
+import copy
+
+
+def merge_nested_dicts(d1, d2):
+    for key, value in d2.items():
+        if key in d1 and isinstance(d1[key], dict) and isinstance(value, dict):
+            merge_nested_dicts(d1[key], value)
+        elif key not in d1:
+            d1[key] = value
 
 
 class JSONHandler:
     def __init__(self, file_path):
         self.file_path = file_path
         self.window_names = "window_names"
+        initial_dict = {
+            self.window_names: [],
+            "current": {
+                "window": "",
+                "auto_popup": True,
+                "auto_minimize": True,
+                "active_delay": 250,
+                "paused_delay": 1000,
+            },
+        }
         if not Path(file_path).exists():
-            data = {
-                self.window_names: [],
-                "current": {"window": "", "auto_popup": True, "auto_minimize": True},
-            }
             try:
                 with open(file_path, "w") as file:
-                    json.dump(data, file, indent=4)
+                    json.dump(initial_dict, file, indent=4)
                 print(f"Data written to file '{file_path}'.")
             except IOError:
                 print(f"Error writing data to file '{file_path}'.")
+        else:
+            saved_dic = self.read()
+            old_saved = copy.deepcopy(saved_dic)
+            merge_nested_dicts(saved_dic, initial_dict)
+            if old_saved != saved_dic:
+                self.write(saved_dic)
 
     def read(self):
         try:

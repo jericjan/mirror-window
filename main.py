@@ -1,24 +1,16 @@
 import argparse
-from tkinter import (
-    Label,
-    Menu,
-    Tk,
-    Toplevel,
-    Listbox,
-    Button,
-    END,
-    simpledialog,
-    messagebox,
-    Frame,
-)
+import math
+from decimal import Decimal
+from tkinter import (END, Button, Entry, Frame, IntVar, Label, Listbox, Menu,
+                     OptionMenu, StringVar, Tk, Toplevel, messagebox,
+                     simpledialog)
 
 import numpy as np
 from PIL import Image, ImageTk
 
+from classes import JSONHandler
 from iterate import iterate_and_find
 from screenshot import get_hwnd, screenshot
-from classes import JSONHandler
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -68,8 +60,14 @@ WIN_NAME = (
     else None
 )
 
-DELAY_MIRRORING = 250
-DELAY_NOTHING = 1000
+
+def convert_fps_ms(num):
+    """Convert fps to milliseconds per frame and vice versa"""
+    return math.floor(1000 / float(num))
+
+
+DELAY_MIRRORING = json_handler.get_current("active_delay")
+DELAY_NOTHING = json_handler.get_current("paused_delay")
 
 
 window = Tk()  # Makes main window
@@ -237,7 +235,7 @@ def switch_window():
             listbox.insert(END, item)
 
         # Create the "Use" button
-        listbox.bind('<<ListboxSelect>>', lambda x: use_item(listbox))
+        listbox.bind("<<ListboxSelect>>", lambda x: use_item(listbox))
 
         # Create the "Add" button
         add_button = Button(popup, text="Add", command=lambda: add_item(listbox))
@@ -249,6 +247,73 @@ def switch_window():
         remove_button.pack()
     else:
         window.children["window_switcher"].deiconify()
+
+
+def change_fps():
+    options = ["FPS", "Milliseconds per frame"]
+
+    def save_fps():
+        global DELAY_MIRRORING
+        global DELAY_NOTHING
+
+        a_fps = active_fps_val.get()
+        a_type = active_fps_type.get()
+        p_fps = paused_fps_val.get()
+        p_type = paused_fps_type.get()
+
+        active_ms = a_fps if a_type == options[1] else convert_fps_ms(a_fps)
+        paused_ms = p_fps if p_type == options[1] else convert_fps_ms(p_fps)
+
+        DELAY_MIRRORING = active_ms
+        DELAY_NOTHING = paused_ms
+
+        json_handler.set_current("active_delay", active_ms)
+        json_handler.set_current("paused_delay", paused_ms)
+
+    if "fps_switcher" not in window.children:
+        popup = Toplevel(window, name="fps_switcher")
+        popup.attributes("-topmost", True)
+        popup.title("FPS Changer")
+        popup.geometry(f"265x251+{window.winfo_x()+10}+{window.winfo_y()+50}")
+
+        frame1 = Frame(popup)
+
+        active_fps_label = Label(popup, text="FPS for when window is tabbed out:")
+
+        active_fps_type = StringVar(popup)
+        active_fps_type.set(options[0])
+        active_fps_dropdown = OptionMenu(frame1, active_fps_type, *options)
+
+        active_fps_val = IntVar(popup)
+        active_fps_val.set(convert_fps_ms(DELAY_MIRRORING))
+        active_fps_input = Entry(frame1, textvariable=active_fps_val)
+
+        frame2 = Frame(popup)
+
+        pause_fps_label = Label(popup, text="FPS for when window is focused:")
+
+        paused_fps_type = StringVar(popup)
+        paused_fps_type.set(options[0])
+        paused_fps_dropdown = OptionMenu(frame2, paused_fps_type, *options)
+
+        paused_fps_val = IntVar(popup)
+        paused_fps_val.set(convert_fps_ms(DELAY_NOTHING))
+        paused_fps_input = Entry(frame2, textvariable=paused_fps_val)
+
+        save_btn = Button(popup, text="Save", command=save_fps)
+
+        active_fps_label.pack()
+        active_fps_dropdown.pack(side="left")
+        active_fps_input.pack(side="left")
+        frame1.pack()
+        pause_fps_label.pack()
+        paused_fps_dropdown.pack(side="left")
+        paused_fps_input.pack(side="left")
+        frame2.pack()
+        save_btn.pack()
+
+    else:
+        window.children["fps_switcher"].deiconify()
 
 
 if WIN_NAME is None:
@@ -268,12 +333,16 @@ filemenu.add_command(
     label=f"Enable auto-minimize: {DO_MINIMIZE}",
     command=lambda: toggle_minimize(filemenu),
 )
+filemenu.add_command(
+    label="Change FPS",
+    command=change_fps,
+)
 filemenu.add_separator()
 filemenu.add_command(
     label="Wrong window?",
     command=lambda: messagebox.showinfo(
         "Wrong window?",
-        "If you have multiple windows with the same name, simply focus the window you want to mirror and press \"Use\" again.",
+        'If you have multiple windows with the same name, simply focus the window you want to mirror and refresh.',
     ),
 )
 filemenu.add_command(label="Exit", command=window.quit)
