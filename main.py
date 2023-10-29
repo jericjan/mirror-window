@@ -1,5 +1,6 @@
 import argparse
 from decimal import Decimal, getcontext
+from pathlib import Path
 from tkinter import (
     END,
     Button,
@@ -9,6 +10,7 @@ from tkinter import (
     Listbox,
     Menu,
     OptionMenu,
+    PhotoImage,
     StringVar,
     Tk,
     Toplevel,
@@ -82,7 +84,13 @@ DELAY_MIRRORING = json_handler.get_current("active_delay", integer_ratio=True)
 DELAY_NOTHING = json_handler.get_current("paused_delay", integer_ratio=True)
 
 
+def get_file(file_name):
+    return Path(__file__).resolve().with_name(file_name)
+
+
 window = Tk()  # Makes main window
+photo = PhotoImage(file=get_file("icon.png"))
+window.iconphoto(True, photo)
 
 
 def update_title():
