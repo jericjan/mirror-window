@@ -5,7 +5,6 @@ from tkinter import (
     Button,
     Entry,
     Frame,
-    IntVar,
     Label,
     Listbox,
     Menu,
@@ -13,16 +12,16 @@ from tkinter import (
     StringVar,
     Tk,
     Toplevel,
+    Variable,
     messagebox,
     simpledialog,
-    Variable,
 )
 
 import numpy as np
 from PIL import Image, ImageTk
 
 from classes import JSONHandler, ProcessLister
-from iterate import iterate_and_find, list_all_hwnd_title
+from iterate import iterate_and_find
 from screenshot import get_hwnd, screenshot
 
 parser = argparse.ArgumentParser()

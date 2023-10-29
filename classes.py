@@ -1,7 +1,7 @@
-import json
-from pathlib import Path
 import copy
+import json
 from decimal import Decimal, getcontext
+from pathlib import Path
 
 from iterate import list_all_hwnd_title
 
@@ -111,7 +111,7 @@ class ProcessLister:
     def __init__(self):
         self.processes = {}
         self.refresh()
-        
+
     def refresh(self):
         self.processes = list_all_hwnd_title()
 

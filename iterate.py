@@ -8,12 +8,12 @@ def enum_windows_callback(hwnd, windows):
 
 
 def iterate_and_find(window_name):
-
     for hwnd, title in list_all_hwnd_title().items():
         if title == window_name:
             shot = screenshot(hwnd)
             if shot != "not enough image data":
                 return hwnd
+
 
 def list_all_hwnd_title():
     windows = {}
