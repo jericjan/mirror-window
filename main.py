@@ -1,14 +1,28 @@
 import argparse
 from decimal import Decimal, getcontext
-from tkinter import (END, Button, Entry, Frame, IntVar, Label, Listbox, Menu,
-                     OptionMenu, StringVar, Tk, Toplevel, messagebox,
-                     simpledialog, Variable)
+from tkinter import (
+    END,
+    Button,
+    Entry,
+    Frame,
+    IntVar,
+    Label,
+    Listbox,
+    Menu,
+    OptionMenu,
+    StringVar,
+    Tk,
+    Toplevel,
+    messagebox,
+    simpledialog,
+    Variable,
+)
 
 import numpy as np
 from PIL import Image, ImageTk
 
-from classes import JSONHandler
-from iterate import iterate_and_find
+from classes import JSONHandler, ProcessLister
+from iterate import iterate_and_find, list_all_hwnd_title
 from screenshot import get_hwnd, screenshot
 
 parser = argparse.ArgumentParser()
@@ -178,6 +192,107 @@ def toggle_minimize(menu):
     menu.entryconfigure(2, label=f"Enable auto-minimize: {DO_MINIMIZE}")
 
 
+def list_windows(parent_win):
+    # region Functions
+    def use_item(listbox):
+        selected_index = listbox.curselection()
+        if selected_index:
+            index = selected_index[0]
+            item = listbox.get(index)
+            print("Selected item:", item)
+            selected_window.set(item)
+        else:
+            print("No item selected.")
+            return
+
+    def add_item(listbox):
+        # Prompt the user for input
+        new_item = selected_window.get()
+
+        # Add the new item to the Listbox
+        if new_item:
+            listbox.master.master.children["!listbox"].insert(END, new_item)
+            # goes up to window_lister, then window_changer, then down to !listbox
+
+        json_handler.add(new_item)
+
+    def insert_sorted_item(listbox, item):
+        index = 0
+        for i in range(listbox.size()):
+            if item < listbox.get(i):
+                index = i
+                break
+            index += 1
+        listbox.insert(index, item)
+
+    # Add items to the Listbox
+    def populate_listbox(dic=None):
+        title_cache = []
+        listbox.delete(0, END)
+        if dic is None:
+            window_names = process_lister.processes
+        else:
+            window_names = dic
+        for hwnd, title in window_names.items():
+            if title != "":
+                if title not in title_cache:
+                    # listbox.insert(END, title)
+                    insert_sorted_item(listbox, title)
+                    title_cache.append(title)
+
+    def filter_items():
+        query = filter_var.get()
+        filtered = process_lister.filter(query)
+        populate_listbox(filtered)
+
+    # endregion
+
+    if "window_lister" not in window.children:
+        popup = Toplevel(parent_win, name="window_lister")
+        popup.attributes("-topmost", True)
+        popup.title("Window Lister")
+        popup.geometry(f"265x251+{parent_win.winfo_x()+10}+{parent_win.winfo_y()+50}")
+
+        # Create a Listbox widget
+        listbox = Listbox(popup)
+
+        process_lister = ProcessLister()
+
+        populate_listbox()
+
+        listbox.bind("<<ListboxSelect>>", lambda x: use_item(listbox))
+
+        frame1 = Frame(popup)
+        filter_label = Label(frame1, text="Filter:")
+        filter_var = StringVar(popup)
+        filter_input = Entry(frame1, textvariable=filter_var)
+
+        filter_input.bind("<KeyRelease>", lambda x: filter_items())
+
+        frame2 = Frame(popup)
+        selected_label = Label(frame2, text="Selected:")
+        selected_window = StringVar(popup)
+        input = Entry(frame2, textvariable=selected_window)
+        save_btn = Button(frame2, text="Add", command=lambda: add_item(listbox))
+
+        # region Packing
+        listbox.pack(fill="both", expand=1)
+
+        filter_label.pack(side="left")
+        filter_input.pack(side="left")
+        frame1.pack()
+
+        selected_label.pack(side="left")
+        input.pack(side="left")
+        save_btn.pack(side="left")
+        frame2.pack()
+
+        # endregion
+
+    else:
+        window.children["window_lister"].deiconify()
+
+
 def switch_window():
     def add_item(listbox):
         # Prompt the user for input
@@ -237,7 +352,8 @@ def switch_window():
         listbox.bind("<<ListboxSelect>>", lambda x: use_item(listbox))
 
         # Create the "Add" button
-        add_button = Button(popup, text="Add", command=lambda: add_item(listbox))
+        # add_button = Button(popup, text="Add", command=lambda: add_item(listbox))
+        add_button = Button(popup, text="Add", command=lambda: list_windows(popup))
         add_button.pack()
 
         remove_button = Button(
@@ -264,9 +380,9 @@ def change_fps():
 
         active_ms = a_fps if a_type == options[1] else convert_fps_ms(a_fps)
         paused_ms = p_fps if p_type == options[1] else convert_fps_ms(p_fps)
-        
+
         DELAY_MIRRORING = active_ms
-        DELAY_NOTHING = paused_ms        
+        DELAY_NOTHING = paused_ms
         json_handler.set_current("active_delay", active_ms, integer_ratio=True)
         json_handler.set_current("paused_delay", paused_ms, integer_ratio=True)
 
@@ -286,7 +402,7 @@ def change_fps():
 
         getcontext().prec = 6
 
-        active_fps_val = Variable(popup)        
+        active_fps_val = Variable(popup)
         active_fps_val.set(convert_fps_ms(DELAY_MIRRORING))
         active_fps_input = Entry(frame1, textvariable=active_fps_val)
 
@@ -344,7 +460,7 @@ filemenu.add_command(
     label="Wrong window?",
     command=lambda: messagebox.showinfo(
         "Wrong window?",
-        'If you have multiple windows with the same name, simply focus the window you want to mirror and refresh.',
+        "If you have multiple windows with the same name, simply focus the window you want to mirror and refresh.",
     ),
 )
 filemenu.add_command(label="Exit", command=window.quit)

@@ -3,6 +3,9 @@ from pathlib import Path
 import copy
 from decimal import Decimal, getcontext
 
+from iterate import list_all_hwnd_title
+
+
 def merge_nested_dicts(d1, d2):
     for key, value in d2.items():
         if key in d1 and isinstance(d1[key], dict) and isinstance(value, dict):
@@ -60,6 +63,8 @@ class JSONHandler:
             print(f"Error writing data to file '{self.file_path}'.")
 
     def add(self, name):
+        if name is None:
+            return
         try:
             dic = self.read()
             dic[self.window_names].append(name)
@@ -85,7 +90,9 @@ class JSONHandler:
 
         if integer_ratio:
             getcontext().prec = 28
-            dic["current"][key] = list(new_value.as_integer_ratio())  # TODO: just use type checks instead
+            dic["current"][key] = list(
+                new_value.as_integer_ratio()
+            )  # TODO: just use type checks instead
         else:
             dic["current"][key] = new_value
         self.write(dic)
@@ -94,6 +101,24 @@ class JSONHandler:
         dic = self.read()
         current_dic = dic["current"]
         if integer_ratio:
-            return (Decimal(current_dic[key][0]) / Decimal(current_dic[key][1])).normalize()
+            return (
+                Decimal(current_dic[key][0]) / Decimal(current_dic[key][1])
+            ).normalize()
         return current_dic[key]
-    
+
+
+class ProcessLister:
+    def __init__(self):
+        self.processes = {}
+        self.refresh()
+        
+    def refresh(self):
+        self.processes = list_all_hwnd_title()
+
+    def filter(self, keyword):
+        self.refresh()
+        filtered_items = {}
+        for hwnd, title in self.processes.items():
+            if keyword.lower() in title.lower():
+                filtered_items[hwnd] = title
+        return filtered_items
