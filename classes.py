@@ -1,22 +1,46 @@
+import copy
 import json
+from decimal import Decimal, getcontext
 from pathlib import Path
+
+from iterate import list_all_hwnd_title
+
+
+def merge_nested_dicts(d1, d2):
+    for key, value in d2.items():
+        if key in d1 and isinstance(d1[key], dict) and isinstance(value, dict):
+            merge_nested_dicts(d1[key], value)
+        elif key not in d1:
+            d1[key] = value
 
 
 class JSONHandler:
     def __init__(self, file_path):
         self.file_path = file_path
         self.window_names = "window_names"
+        initial_dict = {
+            self.window_names: [],
+            "current": {
+                "window": "",
+                "auto_popup": True,
+                "auto_minimize": True,
+                "active_delay": [250, 1],
+                "paused_delay": [1000, 1],
+            },
+        }
         if not Path(file_path).exists():
-            data = {
-                self.window_names: [],
-                "current": {"window": "", "auto_popup": True, "auto_minimize": True},
-            }
             try:
                 with open(file_path, "w") as file:
-                    json.dump(data, file, indent=4)
+                    json.dump(initial_dict, file, indent=4)
                 print(f"Data written to file '{file_path}'.")
             except IOError:
                 print(f"Error writing data to file '{file_path}'.")
+        else:
+            saved_dic = self.read()
+            old_saved = copy.deepcopy(saved_dic)
+            merge_nested_dicts(saved_dic, initial_dict)
+            if old_saved != saved_dic:
+                self.write(saved_dic)
 
     def read(self):
         try:
@@ -39,6 +63,8 @@ class JSONHandler:
             print(f"Error writing data to file '{self.file_path}'.")
 
     def add(self, name):
+        if name is None:
+            return
         try:
             dic = self.read()
             dic[self.window_names].append(name)
@@ -59,12 +85,40 @@ class JSONHandler:
         window_names = dic[self.window_names]
         return window_names
 
-    def set_current(self, key, new_value):
+    def set_current(self, key, new_value, integer_ratio=False):
         dic = self.read()
-        dic["current"][key] = new_value
+
+        if integer_ratio:
+            getcontext().prec = 28
+            dic["current"][key] = list(
+                new_value.as_integer_ratio()
+            )  # TODO: just use type checks instead
+        else:
+            dic["current"][key] = new_value
         self.write(dic)
 
-    def get_current(self, key):
+    def get_current(self, key, integer_ratio=False):
         dic = self.read()
         current_dic = dic["current"]
+        if integer_ratio:
+            return (
+                Decimal(current_dic[key][0]) / Decimal(current_dic[key][1])
+            ).normalize()
         return current_dic[key]
+
+
+class ProcessLister:
+    def __init__(self):
+        self.processes = {}
+        self.refresh()
+
+    def refresh(self):
+        self.processes = list_all_hwnd_title()
+
+    def filter(self, keyword):
+        self.refresh()
+        filtered_items = {}
+        for hwnd, title in self.processes.items():
+            if keyword.lower() in title.lower():
+                filtered_items[hwnd] = title
+        return filtered_items
